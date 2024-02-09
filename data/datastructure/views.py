@@ -14,6 +14,15 @@ def setsymbol():
         post.save()
         print(user['symbol'])
 
+def setsymbol2():
+    url = "https://dapi.binance.com/dapi/v1/exchangeInfo"
+    response = requests.get(url)
+    userdata = response.json()['symbols']
+    for user in userdata:
+        post = symbolmaster(symbol = user['symbol'],type = "COIN-M")
+        post.save()
+        print(user['symbol'])
+
 def get1hrdata():
     userdata = symbolmaster.objects.all()
     with ThreadPoolExecutor(max_workers=130) as executor:
