@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Binance Price Change Chart</title>
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body * {
+        color: white;
+    }
+    body {
+      font-family: serif;
+      background-color: #101820;
+    }
+    #chartContainer {
+      width: 1000px;
+      height: 450px;
+      margin: 20px auto 60px auto ;
+      background-color: #101820;
+      border: 1px solid #686161;
+      border-radius: 5px;
+      padding: 10px;
+      animation: fadeIn 1s ease-in-out, fadeIn 1s ease-in-out;
+
+    }
+    #dataTable {
+      width: 100%;
+      margin: 20px auto;
+      border-collapse: collapse;
+      animation: slideIn 1s ease-in-out, fadeIn 1s ease-in-out;
+
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    @keyframes slideIn {
+      from {
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    @keyframes scaleIn {
+      from {
+        transform: scale(0);
+      }
+      to {
+        transform: scale(1);
+      }
+    }
+    #dataTable th{
+      /* border: 1px solid #686161; */
+      padding: 10px;
+      text-align: center;
+    }
+    #dataTable td{
+      padding: 10px;
+      text-align: center;
+      color: #95a9f3cd;
+    }
+    #dataTable th {
+      color: #b0c4b1;
+      
+    }
+    #dataTable tr:nth-child(even) {
+      background-color: #1E253E;
+    }
+   
+    #dataTable tr:hover {
+      background-color: #15202B;
+    }
+    #dataTable select {
+      width: 20;
+      height: 20;
+      padding: 4px;
+      border: none;
+      border-radius: 5px;
+      background-color: #12517b;
+
+    }
+    #dataTable select:hover {
+      background-color: #023164;
+    }
+    #dataTable button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 5px;
+      background-color: #12517b;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    #dataTable button:hover {
+      background-color: #023164;
+    }
+    .h1 {
+      text-align: center;
+      font-size: 50px;
+      color: #5bb2ff;
+    }
+    .button{
+      color:white ;
+      background-color: #12517b;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+
+    }
+    .button :hover{
+      background-color: #023164;
+
+    }
+
+    @media only screen and (max-width: 768px) {
+      #chartContainer, #dataTable {
+        width: 95%;
+      }
+    }
+    @media only screen and (max-width: 500px) {
+      .h1 {
+        font-size: 30px;
+      }
+    }
+
+    
+  </style>
+</head>
+<body>
+  <div>
+    <h1 class="h1">Binance Price Change Chart</h1>
+  </div>
+  <div id="chartContainer">
+    <canvas id="priceChangeChart"></canvas>
+  </div>
+<div>
+  <button id="button">1 H</button>
+</div>
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Price</th>
+        <th>LTP</th>
+        <th>Price Change</th>
+        <th>Change
+          <select id="changeSelect">
+            <!-- <option value="1h">1h</option>
+            <option value="4h">4h</option> -->
+            <option value="24h">24h</option>
+          </select>
+        </th>
+        <th>24h Volume</th>
+      </tr>
+    </thead>
+    <tbody id="dataBody"> 
+           {% for crypto in symbol_data %}
+
+      <tr>
+        <td>{{ crypto.symbol }} </td>
+        <td>{{ crypto.totalhr }} </td>
+        <td>{{ crypto.ltp }} </td>
+        <td> {{ crypto.totalhrprice }} </td>
+        <td>{{ crypto.totalhrchange }}% </td>
+        <td>$50,000,000</td>
+        
+      </tr>
+      {% endfor %}
+      
+      
+    </tbody>
+  </table>
+  <script>
+    // Function to update data every second
+    function updateData() {
+        $.ajax({
+            url: '/data/get_data1/',  // Replace with the URL of your get_data view
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                $('#dataBody').empty();
+                for (var i = 0; i < data.length; i++) {
+                    var row = '<tr>' +
+                        '<td>' + data[i].symbol + '</td>' +
+                        '<td>' + data[i].totalhr + '</td>' +
+                        '<td>' + data[i].ltp + '</td>' +
+                        '<td>' + data[i].totalhrprice + '</td>' +
+                        '<td>' + data[i].totalhrchange + '%</td>' +
+                        '<td>$50,000,000</td>' +
+                        '</tr>';
+                    $('#dataBody').append(row);
+                }
+                updateChart(data);
+            },
+            complete: function () {
+                // Schedule the next update after 1 second
+                setInterval(updateData, 1000);
+            }
+        });
+    }
+    setInterval(updateData, 1000);
+    
+</script>
+
+
+  <!-- <script>
+    var bins = ['>10%', '7-10%', '5-7%', '3-5%', '0-3%', '0%', '0-3%', '3-5%', '5-7%', '7-10%', '>10%'];
+    var frequencies = [120, 230, 300, 400, 500, 550, 500, 400, 300, 230, 120]; 
+
+    var backgroundColors = frequencies.map((freq, index) => {
+      if (index < 5) {
+        return 'rgba(0, 128, 0, 0.6)'; 
+      } else if (index === 5) {
+        return 'rgba(128, 128, 128, 0.6)'; 
+      } else {
+        return 'rgba(255, 0, 0, 0.6)'; 
+      }
+    });
+
+    var ctx = document.getElementById('priceChangeChart').getContext('2d');
+    var priceChangeChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: bins,
+        datasets: [{
+          label: 'Frequency',
+          data: frequencies,
+          backgroundColor: backgroundColors,
+          borderColor: 'rgba(0, 0, 0, 1)',
+          borderWidth: 1,
+          borderRadius:20,
+          barThickness: 25,
+        }]
+      },
+      options: {
+        scales: {
+          xAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Price Change (%)',
+              fontSize: 14
+            }
+          }],
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Frequency',
+              fontSize: 14
+            },
+            ticks: {
+              beginAtZero: true
+            }
+          }]
+        },
+        legend: {
+          display: false
+        },
+        title: {
+          display: true,
+          text: 'Binance Price Change Chart',
+          fontSize: 16
+        }
+      }
+    });
+  </script>
+   -->
+   <script>
+    function updateChartData() {
+      
+        // Make an AJAX request to your API to get new data
+        $.ajax({
+            url: '/data/chart_24hr/',  // Replace with the actual URL of your API
+            type: 'GET',
+            dataType: 'json',
+            success: function (newData) {
+
+                console.log(newData)
+                // Update chart data with the new frequencies and counts
+                // priceChangeChart.data.datasets[0].data = newData.chartData;
+                priceChangeChart.data.datasets[0].data = newData.counts;
+                priceChangeChart.update();  // Update the chart
+            },
+            error: function (error) {
+                console.error('Error fetching data:', error);
+            }
+        });
+    }
+    
+    var bins = ['>10%', '7-10%', '5-7%', '3-5%', '0-3%', '0%', '0-3%', '3-5%', '5-7%', '7-10%', '>10%'];
+    // var bins = ['>10%', '7-10%', '5-7%', '3-5%', '0-3%']
+
+       var ctx = document.getElementById('priceChangeChart').getContext('2d');
+    var priceChangeChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: bins,
+            datasets: [
+                {
+                    label: 'Frequency',
+                    data: [],  // Initial data, will be updated dynamically
+                    // backgroundColor:Array(5).fill('rgba(0, 128, 0, 0.6)').concat(Array(5).fill('rgba(255, 0, 0, 0.6)')),
+                    backgroundColor:[
+                    'rgba(0, 128, 0, 0.6)',
+                    'rgba(0, 128, 0, 0.6)',
+                    'rgba(0, 128, 0, 0.6)',
+                    'rgba(0, 128, 0, 0.6)',
+                    'rgba(0, 128, 0, 0.6)',
+                    'rgba(169, 169, 169, 0.6)',
+                    'rgba(255, 0, 0, 0.6)',
+                    'rgba(255, 0, 0, 0.6)',
+                    'rgba(255, 0, 0, 0.6)',
+                    'rgba(255, 0, 0, 0.6)'
+                ],
+                    borderColor: 'rgba(0, 0, 0, 1)',
+                    borderWidth: 1,
+                    borderRadius: 20,
+                    barThickness: 15,
+                },
+                {
+                    label: 'Counts',
+                    data: [],  // Initial data, will be updated dynamically
+                    backgroundColor: 'rgba(255, 0, 0, 0.6)',  // Red color for counts
+                    borderColor: 'rgba(0, 0, 0, 1)',
+                    borderWidth: 1,
+                    borderRadius: 20,
+                    barThickness: 25,
+                }
+            ]
+        },
+        options: {
+            scales: {
+                xAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Price Change (%)',
+                        fontSize: 14
+                    }
+                }],
+                yAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Frequency/Counts',
+                        fontSize: 14
+                    },
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            },
+            legend: {
+                display: true
+            },
+            title: {
+                display: true,
+                text: 'Binance Price Change Chart',
+                fontSize: 16
+            }
+        }
+    });
+    setInterval(updateChartData, 1000);
+    // Initial call to start the update loop
+     // 10 seconds interval
+</script>
+
+
+</body>
+</html>

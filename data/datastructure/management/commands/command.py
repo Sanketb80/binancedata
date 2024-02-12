@@ -10,7 +10,7 @@ from decimal import Decimal
 from datastructure.models import symbolmaster
 
 class BinanceWebSocketClient:
-    def _init_(self):
+    def __init__(self):
         
         self.last_update_time = {}
 
@@ -19,26 +19,27 @@ class BinanceWebSocketClient:
             data = json.loads(message)
 
             for ticker_data in data:
+                
                 symbol = ticker_data.get('s', 'N/A')
                 close_price = Decimal(ticker_data.get('c', 'N/A'))
                 try:
                     
                     users = symbolmaster.objects.get(symbol = symbol)
                     
-                    onehr = users.onehr
-                    twohr = users.twohr
-                    totalhr = users.totalhr
+                    onehr = round(float(users.onehr),3)
+                    twohr = round(float(users.twohr),3)
+                    totalhr = round(float(users.totalhr),3)
                     
                     onehrchange = float(close_price) - float(onehr)
-                    users.onehrprice = onehrchange
-                    
+                    users.onehrprice = round(onehrchange,3)
+                    users.ltp = float(close_price)
                     users.onehrchange = (onehrchange/float(onehr)) * 100
                     
                     twohrchange = float(close_price) - float(twohr)
-                    users.twohrprice = twohrchange
+                    users.twohrprice =  round(twohrchange,3)
                     users.twohrchange = (twohrchange/float(twohr)) * 100
                     totalhrchange = float(close_price) - float(totalhr)
-                    users.totalhrprice = totalhrchange
+                    users.totalhrprice = round(totalhrchange,3)
                     users.totalhrchange = (totalhrchange/float(totalhr)) * 100
                     users.save()
                     print(symbol,onehrchange,twohrchange,totalhrchange)
