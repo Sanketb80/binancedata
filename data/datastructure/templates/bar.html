@@ -115,6 +115,17 @@
       transition: background-color 0.3s;
 
     }
+    button {
+      padding: 5px 10px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      background-color: #12517b;
+      color: rgb(255, 255, 255);
+      cursor: pointer;
+      transition: background-color 0.3s;
+      
+    }
     .button :hover{
       background-color: #023164;
 
@@ -141,9 +152,14 @@
   <div id="chartContainer">
     <canvas id="priceChangeChart"></canvas>
   </div>
-<div>
-  <button id="button">1 H</button>
-</div>
+  <div>
+    <!-- Add three buttons for different time intervals -->
+    
+    <button ><a href="/data/get_data_1hr/" >1 Hours</a></button>
+    <button ><a href="/data/get_data_4hr/" >4 Hours</a></button>
+    <button> <a href="/data/get_data_24hr/" >24 Hours</a></button>
+  </div>
+
   <table id="dataTable">
     <thead>
       <tr>
@@ -304,7 +320,7 @@
             labels: bins,
             datasets: [
                 {
-                    label: 'Frequency',
+                    label: 'Price-Up',
                     data: [],  // Initial data, will be updated dynamically
                     // backgroundColor:Array(5).fill('rgba(0, 128, 0, 0.6)').concat(Array(5).fill('rgba(255, 0, 0, 0.6)')),
                     backgroundColor:[
@@ -322,10 +338,10 @@
                     borderColor: 'rgba(0, 0, 0, 1)',
                     borderWidth: 1,
                     borderRadius: 20,
-                    barThickness: 15,
+                    barThickness: 25,
                 },
                 {
-                    label: 'Counts',
+                    label: 'Price-Down',
                     data: [],  // Initial data, will be updated dynamically
                     backgroundColor: 'rgba(255, 0, 0, 0.6)',  // Red color for counts
                     borderColor: 'rgba(0, 0, 0, 1)',

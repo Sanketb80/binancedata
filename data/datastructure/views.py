@@ -8,6 +8,25 @@ from django.http import JsonResponse
 from django.db.models import Q
 
 
+def amol(n_pairs, percentage_move):
+    # Initialize variables
+    p = percentage_move / 100
+    n_trials = 10  # Assuming 10 intervals based on your example
+
+    # Calculate probabilities for each interval
+    probabilities_up = []
+    probabilities_down = []
+    for i in range(n_trials):
+        probability_up = n_pairs * p
+        probability_down = n_pairs * (1 - p)
+        probabilities_up.append(probability_up)
+        probabilities_down.append(probability_down)
+
+        # Update for the next interval
+        n_pairs = probability_down  # The remaining pairs
+
+    return probabilities_up, probabilities_down
+
 def setsymbol():
     url = "https://fapi.binance.com/fapi/v1/exchangeInfo"
     response = requests.get(url)
@@ -173,22 +192,62 @@ def get_data3(request):
     
     data = [{
         'symbol': crypto.symbol,
-        'onehr': crypto.onehr,
-        'ltp': crypto.ltp,
-        'onehrprice': crypto.onehrprice,
-        'onehrchange': crypto.onehrchange,
+        'onehr': str(crypto.onehr),
+        'ltp': str(crypto.ltp),
+        'onehrprice': str(crypto.onehrprice),
+        'onehrchange': str(crypto.onehrchange),
        
     } for crypto in symbol_data_onehr]
-
+    
     return JsonResponse(data,safe = False)
 
 def get_data_1hr(request):
     
     symbol_data_onehr = symbolmaster.objects.all()
 
-    return render(request, 'templates/data_1hr.html', {'symbol_data_onehr': symbol_data_onehr})
+    return render(request, 'templates/demo.html', {'symbol_data_onehr': symbol_data_onehr})
 
 
+# def one_hr(request):
+#     # user1 = symbolmaster.objects.filter(Q(onehrchange__lte=2) & Q(onehrchange__gte=0)).count()
+#     # user1 = symbolmaster.objects.filter(
+#     #     Q(onehrchange__gt=10) |
+#     #     Q(onehrchange__gte=7, onehrchange__lte=10) |
+#     #     Q(onehrchange__gte=5, onehrchange__lt=7) |
+#     #     Q(onehrchange__gte=3, onehrchange__lt=5) |
+#     #     Q(onehrchange__gte=0, onehrchange__lt=3)
+#     # ).count()
+#     # count_gt_10 = symbolmaster.objects.filter(onehrchange__gt=10).count()
+#     # count_7_to_10 = symbolmaster.objects.filter(onehrchange__gte=7, onehrchange__lte=10).count()
+#     # count_5_to_7 = symbolmaster.objects.filter(onehrchange__gte=5, onehrchange__lt=7).count()
+#     # count_3_to_5 = symbolmaster.objects.filter(onehrchange__gte=3, onehrchange__lt=5).count()
+#     # count_0_to_3 = symbolmaster.objects.filter(onehrchange__gte=0, onehrchange__lt=3).count()
+
+#     # return render(request, 'templates/demo.html', {
+#     #     'count_gt_10': count_gt_10,
+#     #     'count_7_to_10': count_7_to_10,
+#     #     'count_5_to_7': count_5_to_7,
+#     #     'count_3_to_5': count_3_to_5,
+#     #     'count_0_to_3': count_0_to_3,
+#     # })
+#     counts = [
+#         symbolmaster.objects.filter(onehrchange__gte=10).count(),
+#         symbolmaster.objects.filter(onehrchange__gte=7, onehrchange__lt=10).count(),
+#         symbolmaster.objects.filter(onehrchange__gte=5, onehrchange__lt=7).count(),
+#         symbolmaster.objects.filter(onehrchange__gte=3, onehrchange__lt=5).count(),
+#         symbolmaster.objects.filter(onehrchange__gte=0, onehrchange__lt=3).count(),
+#         symbolmaster.objects.filter(onehrchange__gte=-3, onehrchange__lt=0).count(),
+#         symbolmaster.objects.filter(onehrchange__gte=-5, onehrchange__lt=-3).count(),
+#         symbolmaster.objects.filter(onehrchange__gte=-7, onehrchange__lt=-5).count(),
+#         symbolmaster.objects.filter(onehrchange__gte=-10, onehrchange__lt=-7).count(),
+#         symbolmaster.objects.filter(onehrchange__lt=-10).count()
+
+#     ]
+
+#     return JsonResponse({'counts': counts})
+import json
+from django.views.decorators.csrf import csrf_exempt
+@csrf_exempt
 def one_hr(request):
     # user1 = symbolmaster.objects.filter(Q(onehrchange__lte=2) & Q(onehrchange__gte=0)).count()
     # user1 = symbolmaster.objects.filter(
@@ -211,21 +270,44 @@ def one_hr(request):
     #     'count_3_to_5': count_3_to_5,
     #     'count_0_to_3': count_0_to_3,
     # })
-    counts = [
-        symbolmaster.objects.filter(onehrchange__gte=10).count(),
-        symbolmaster.objects.filter(onehrchange__gte=7, onehrchange__lt=10).count(),
-        symbolmaster.objects.filter(onehrchange__gte=5, onehrchange__lt=7).count(),
-        symbolmaster.objects.filter(onehrchange__gte=3, onehrchange__lt=5).count(),
-        symbolmaster.objects.filter(onehrchange__gte=0, onehrchange__lt=3).count(),
-        symbolmaster.objects.filter(onehrchange__gte=-3, onehrchange__lt=0).count(),
-        symbolmaster.objects.filter(onehrchange__gte=-5, onehrchange__lt=-3).count(),
-        symbolmaster.objects.filter(onehrchange__gte=-7, onehrchange__lt=-5).count(),
-        symbolmaster.objects.filter(onehrchange__gte=-10, onehrchange__lt=-7).count(),
-        symbolmaster.objects.filter(onehrchange__lt=-10).count()
+    
+    data = json.loads(request.body.decode('utf-8'))
+    percentage = data.get('percentage', None)
+    step = int(percentage)
+    percentage_array =  generate_percentage_array(10, -10, step)
+    counts1 = []
+    counts2 = []
+   
+    for i in range(1,len(percentage_array)):
+        counts1.append(symbolmaster.objects.filter(onehrchange__gte=percentage_array[i], onehrchange__lt=percentage_array[i-1]).count())
+        counts2.append(str(percentage_array[i-1])+"-"+str(percentage_array[i])+"%")
+    print(counts1,counts2)
+    # counts = [
+    #     symbolmaster.objects.filter(onehrchange__gte=10).count(),
+    #     symbolmaster.objects.filter(onehrchange__gte=7, onehrchange__lt=10).count(),
+    #     symbolmaster.objects.filter(onehrchange__gte=5, onehrchange__lt=7).count(),
+    #     symbolmaster.objects.filter(onehrchange__gte=3, onehrchange__lt=5).count(),
+    #     symbolmaster.objects.filter(onehrchange__gte=0, onehrchange__lt=3).count(),
+    #     symbolmaster.objects.filter(onehrchange__gte=-3, onehrchange__lt=0).count(),
+    #     symbolmaster.objects.filter(onehrchange__gte=-5, onehrchange__lt=-3).count(),
+    #     symbolmaster.objects.filter(onehrchange__gte=-7, onehrchange__lt=-5).count(),
+    #     symbolmaster.objects.filter(onehrchange__gte=-10, onehrchange__lt=-7).count(),
+    #     symbolmaster.objects.filter(onehrchange__lt=-10).count()
 
-    ]
+    # ]
 
-    return JsonResponse({'counts': counts})
+    return JsonResponse({'counts': counts1,"counts1":counts2})
+
+def generate_percentage_array(start, end, step):
+    percentage_array = []
+
+    # Generate the array from start to end with the specified step
+    current_value = start
+    while current_value >= end:
+        percentage_array.append(current_value)
+        current_value -= step
+
+    return percentage_array
 
 def four_hr(request):
     

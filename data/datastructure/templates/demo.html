@@ -119,6 +119,60 @@
         font-size: 30px;
       }
     }
+    button {
+      padding: 5px 10px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      background-color: #12517b;
+      color: rgb(255, 255, 255);
+      cursor: pointer;
+      transition: background-color 0.3s;
+      
+    }
+    button:hover {
+      background-color: #023164;
+    }
+
+/* Add styles for button container */
+  .button-container {
+    text-align: center;
+    margin-top: 20px; 
+  }
+  .button-container {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    label {
+        margin-right: 10px;
+        font-size: 16px;
+        color: #b0c4b1;
+    }
+
+    select {
+        width: 60px;
+        height: 30px;
+        padding: 4px;
+        border: 1px solid #686161;
+        border-radius: 5px;
+        background-color: #12517b;
+        color: white;
+    }
+
+    button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 5px;
+        background-color: #12517b;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    button:hover {
+        background-color: #023164;
+    }
   </style>
 </head>
 <body>
@@ -128,6 +182,33 @@
   <div id="chartContainer">
     <canvas id="priceChangeChart"></canvas>
   </div>
+  <div>
+    <!-- Add three buttons for different time intervals -->
+    
+    <button ><a href="/data/get_data_1hr/" >1 Hours</a></button>
+    <button ><a href="/data/get_data_4hr/" >4 Hours</a></button>
+    <button> <a href="/data/get_data_24hr/" >24 Hours</a></button>
+  </div>
+  <div class="button-container">
+    <label for="percentageSelect">Select Percentage:</label>
+    <select id="percentageSelect">
+      <option value="0.5">0.5%%</option>
+        <option value="1">1%</option>
+        <option value="2">2%</option>
+        <option value="3">3%</option>
+        <option value="4">4%</option>
+        <option value="5">5%</option>
+        <option value="6">6%</option>
+        <option value="7">7%</option>
+        <option value="8">8%</option>
+        <option value="9">9%</option>
+        <option value="10">10%</option>
+        
+        <!-- Add more options as needed -->
+    </select>
+    <button onclick="updateChartDataFromDropdown()">Update Chart</button>
+    
+ </div>
 
   <table id="dataTable">
     <thead>
@@ -256,19 +337,29 @@
     });
   </script> -->
   <script>
-    function updateChartData() {
-      
+    function updateChartDataFromDropdown() {
+      console.log('sam')
+        var selectedPercentage = document.getElementById('percentageSelect').value;
+        updateChartData(selectedPercentage);
+    }
+    
+    function updateChartData(percentageDifference) {
+        
+        
         // Make an AJAX request to your API to get new data
         $.ajax({
             url: '/data/chart_1hr/',  // Replace with the actual URL of your API
-            type: 'GET',
+            type: 'POST',
             dataType: 'json',
+            data: JSON.stringify({ percentage: percentageDifference }),
+           
             success: function (newData) {
 
                 console.log(newData)
                 // Update chart data with the new frequencies and counts
                 // priceChangeChart.data.datasets[0].data = newData.chartData;
                 priceChangeChart.data.datasets[0].data = newData.counts;
+                priceChangeChart.data.labels = newData.counts1;
                 priceChangeChart.update();  // Update the chart
             },
             error: function (error) {
@@ -277,13 +368,13 @@
         });
     }
     
-    var bins = ['>10%', '7-10%', '5-7%', '3-5%', '0-3%', '0%', '0-3%', '3-5%', '5-7%', '7-10%', '>10%'];
+    // var bins = ['>10%', '7-10%', '5-7%', '3-5%', '0-3%', '0%', '0-3%', '3-5%', '5-7%', '7-10%', '>10%'];
     // var bins = ['>10%', '7-10%', '5-7%', '3-5%', '0-3%']
     var ctx = document.getElementById('priceChangeChart').getContext('2d');
     var priceChangeChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: bins,
+            labels: [],
             datasets: [
                 {
                     label: 'Frequency',
@@ -335,7 +426,7 @@
             }
         }
     });
-    setInterval(updateChartData, 1000);
+    setInterval(updateChartDataFromDropdown, 1000);
     // Initial call to start the update loop
      // 10 seconds interval
 </script>
