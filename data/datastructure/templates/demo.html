@@ -192,17 +192,13 @@
   <div class="button-container">
     <label for="percentageSelect">Select Percentage:</label>
     <select id="percentageSelect">
-      <option value="0.5">0.5%%</option>
+      <option value="0.5">0.5%</option>
         <option value="1">1%</option>
         <option value="2">2%</option>
         <option value="3">3%</option>
         <option value="4">4%</option>
         <option value="5">5%</option>
-        <option value="6">6%</option>
-        <option value="7">7%</option>
-        <option value="8">8%</option>
-        <option value="9">9%</option>
-        <option value="10">10%</option>
+        
         
         <!-- Add more options as needed -->
     </select>
@@ -359,6 +355,7 @@
                 // Update chart data with the new frequencies and counts
                 // priceChangeChart.data.datasets[0].data = newData.chartData;
                 priceChangeChart.data.datasets[0].data = newData.counts;
+                priceChangeChart.data.datasets[0].backgroundColor = newData.counts3;
                 priceChangeChart.data.labels = newData.counts1;
                 priceChangeChart.update();  // Update the chart
             },
@@ -379,7 +376,7 @@
                 {
                     label: 'Frequency',
                     data: [],  // Initial data, will be updated dynamically
-                    backgroundColor: 'rgba(0, 128, 0, 0.6)',
+                    backgroundColor: [],
                     borderColor: 'rgba(0, 0, 0, 1)',
                     borderWidth: 1,
                     borderRadius: 20,

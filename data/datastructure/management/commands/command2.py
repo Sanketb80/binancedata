@@ -8,11 +8,15 @@ def function1():
 
 def function2():
     call_command('command1')
+def function5():
+    call_command('command3')
 thread1 = Thread(target=function1)
 thread2 = Thread(target=function2)
+thread5 = Thread(target=function5)
 
 thread1.start() # returns immediately
 thread2.start()
+thread5.start()
 def function3():
     call_command('onehr')
 # thread3 = Thread(target=function3)

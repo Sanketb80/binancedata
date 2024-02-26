@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Binance Price Change Chart</title>
   <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body * {
@@ -91,17 +92,6 @@
     #dataTable select:hover {
       background-color: #023164;
     }
-    button {
-      padding: 5px 10px;
-      margin: 5px;
-      border: none;
-      border-radius: 5px;
-      background-color: #12517b;
-      color: rgb(255, 255, 255);
-      cursor: pointer;
-      transition: background-color 0.3s;
-      
-    }
     #dataTable button {
       padding: 8px 16px;
       border: none;
@@ -129,6 +119,60 @@
         font-size: 30px;
       }
     }
+    button {
+      padding: 5px 10px;
+      margin: 5px;
+      border: none;
+      border-radius: 5px;
+      background-color: #12517b;
+      color: rgb(255, 255, 255);
+      cursor: pointer;
+      transition: background-color 0.3s;
+      
+    }
+    button:hover {
+      background-color: #023164;
+    }
+
+/* Add styles for button container */
+  .button-container {
+    text-align: center;
+    margin-top: 20px; 
+  }
+  .button-container {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    label {
+        margin-right: 10px;
+        font-size: 16px;
+        color: #b0c4b1;
+    }
+
+    select {
+        width: 60px;
+        height: 30px;
+        padding: 4px;
+        border: 1px solid #686161;
+        border-radius: 5px;
+        background-color: #12517b;
+        color: white;
+    }
+
+    button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 5px;
+        background-color: #12517b;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    button:hover {
+        background-color: #023164;
+    }
   </style>
 </head>
 <body>
@@ -145,6 +189,23 @@
     <button ><a href="/data/get_data_4hr/" >4 Hours</a></button>
     <button> <a href="/data/get_data_24hr/" >24 Hours</a></button>
   </div>
+  <div class="button-container">
+    <label for="percentageSelect">Select Percentage:</label>
+    <select id="percentageSelect">
+      <option value="0.5">0.5%</option>
+        <option value="1">1%</option>
+        <option value="2">2%</option>
+        <option value="3">3%</option>
+        <option value="4">4%</option>
+        <option value="5">5%</option>
+        
+        
+        <!-- Add more options as needed -->
+    </select>
+    <button onclick="updateChartDataFromDropdown()">Update Chart</button>
+    
+ </div>
+
   <table id="dataTable">
     <thead>
       <tr>
@@ -154,23 +215,23 @@
         <th>Price Change</th>
         <th>Change
           <select id="changeSelect">
-            <!-- <option value="1h">1h</option> -->
+            <option value="1h">1h</option>
             <option value="4h">4h</option>
-            <!-- <option value="24h">24h</option> -->
+            <option value="24h">24h</option>
           </select>
         </th>
         <th>24h Volume</th>
       </tr>
     </thead>
     <tbody id="dataBody"> 
-           {% for crypto in symbol_data_twohr %}
+           {% for crypto in symbol_data_onehr %}
 
       <tr>
         <td>{{ crypto.symbol }} </td>
-        <td>{{ crypto.twohr }} </td>
+        <td>{{ crypto.onehr }} </td>
         <td>{{ crypto.ltp }} </td>
-        <td> {{ crypto.twohrprice }} </td>
-        <td>{{ crypto.twohrchange }}% </td>
+        <td> {{ crypto.onehrprice }} </td>
+        <td>{{ crypto.onehrchange }}% </td>
         <td>$50,000,000</td>
         
       </tr>
@@ -208,6 +269,7 @@
         });
     }
     setInterval(updateData, 1000);
+    
 </script>
 
   <!-- <script>
@@ -271,19 +333,30 @@
     });
   </script> -->
   <script>
-    function updateChartData() {
-      
+    function updateChartDataFromDropdown() {
+      console.log('sam')
+        var selectedPercentage = document.getElementById('percentageSelect').value;
+        updateChartData(selectedPercentage);
+    }
+    
+    function updateChartData(percentageDifference) {
+        
+        
         // Make an AJAX request to your API to get new data
         $.ajax({
-            url: '/data/chart_1hr/',  // Replace with the actual URL of your API
-            type: 'GET',
+            url: '/data/chart_4hr/',  // Replace with the actual URL of your API
+            type: 'POST',
             dataType: 'json',
+            data: JSON.stringify({ percentage: percentageDifference }),
+           
             success: function (newData) {
 
                 console.log(newData)
                 // Update chart data with the new frequencies and counts
                 // priceChangeChart.data.datasets[0].data = newData.chartData;
                 priceChangeChart.data.datasets[0].data = newData.counts;
+                priceChangeChart.data.datasets[0].backgroundColor = newData.counts3;
+                priceChangeChart.data.labels = newData.counts1;
                 priceChangeChart.update();  // Update the chart
             },
             error: function (error) {
@@ -292,36 +365,25 @@
         });
     }
     
-    var bins = ['>10%', '7-10%', '5-7%', '3-5%', '0-3%', '0%', '0-3%', '3-5%', '5-7%', '7-10%', '>10%'];
+    // var bins = ['>10%', '7-10%', '5-7%', '3-5%', '0-3%', '0%', '0-3%', '3-5%', '5-7%', '7-10%', '>10%'];
     // var bins = ['>10%', '7-10%', '5-7%', '3-5%', '0-3%']
     var ctx = document.getElementById('priceChangeChart').getContext('2d');
     var priceChangeChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: bins,
+            labels: [],
             datasets: [
                 {
-                    label: 'Price-Up',
+                    label: 'Frequency',
                     data: [],  // Initial data, will be updated dynamically
-                    backgroundColor:[
-                    'rgba(0, 128, 0, 0.6)',
-                    'rgba(0, 128, 0, 0.6)',
-                    'rgba(0, 128, 0, 0.6)',
-                    'rgba(0, 128, 0, 0.6)',
-                    'rgba(0, 128, 0, 0.6)',
-                    'rgba(169, 169, 169, 0.6)',
-                    'rgba(255, 0, 0, 0.6)',
-                    'rgba(255, 0, 0, 0.6)',
-                    'rgba(255, 0, 0, 0.6)',
-                    'rgba(255, 0, 0, 0.6)'
-                ],
+                    backgroundColor: [],
                     borderColor: 'rgba(0, 0, 0, 1)',
                     borderWidth: 1,
                     borderRadius: 20,
                     barThickness: 25,
                 },
                 {
-                    label: 'Price-Down',
+                    label: 'Counts',
                     data: [],  // Initial data, will be updated dynamically
                     backgroundColor: 'rgba(255, 0, 0, 0.6)',  // Red color for counts
                     borderColor: 'rgba(0, 0, 0, 1)',
@@ -361,10 +423,13 @@
             }
         }
     });
-    setInterval(updateChartData, 1000);
+    setInterval(updateChartDataFromDropdown, 1000);
     // Initial call to start the update loop
      // 10 seconds interval
 </script>
+
+  
+  
 
 </body>
 </html>

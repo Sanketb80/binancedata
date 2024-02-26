@@ -23,6 +23,10 @@ class BinanceWebSocketClient:
                 
             #     symbol = ticker_data.get('s', 'N/A')
             #     close_price = Decimal(ticker_data.get('c', 'N/A'))
+            #     print(symbol,close_price)
+            #     # price_change = Decimal(ticker_data.get('p','N/A'))
+            #     # price_change_percent = Decimal(ticker_data.get('p','N/A'))
+                
             #     try:
                     
             #         users = symbolmaster.objects.get(symbol = symbol)
@@ -62,12 +66,14 @@ class BinanceWebSocketClient:
         except Exception as e:
             print(f"Error processing WebSocket message: {e}")
 
+    
+
     def on_close(self, ws, close_status_code, close_msg):
         print("Connection closed")
 
     def run_forever(self):
         ws = websocket.WebSocketApp(
-            "wss://fstream.binance.com/ws/!ticker@arr",
+            "wss://stream.binance.com/ws/!ticker@arr",
             on_message=self.on_message,
             on_close=self.on_close
         )
@@ -85,31 +91,71 @@ class Command(BaseCommand):
         binance_client = BinanceWebSocketClient()
         binance_client.run_forever()
 
+# def updatedata(ticker_data):
+#     symbol = ticker_data.get('s', 'N/A')
+#     close_price = Decimal(ticker_data.get('c', 'N/A'))
+#     print(symbol,close_price)
+#     # price_change = Decimal(ticker_data.get('p','N/A'))
+#     # price_change_percent = Decimal(ticker_data.get('p','N/A'))
+    
+#     try:
         
+#         users = symbolmaster.objects.get(symbol = symbol)
+        
+#         onehr = float(users.onehr)
+#         twohr = float(users.twohr)
+#         totalhr = float(users.totalhr)
+        
+#         onehrchange = float(close_price) - float(onehr)
+#         users.onehrprice = onehrchange
+#         users.ltp = float(close_price)
+#         users.onehrchange = (onehrchange/float(onehr)) * 100
+        
+#         twohrchange = float(close_price) - float(twohr)
+#         users.twohrprice =  twohrchange
+#         users.twohrchange = (twohrchange/float(twohr)) * 100
+#         totalhrchange = float(close_price) - float(totalhr)
+#         users.totalhrprice = totalhrchange
+#         users.totalhrchange = (totalhrchange/float(totalhr)) * 100
+#         users.save()
+#         print(symbol,onehrchange,twohrchange,totalhrchange)
+#     except:
+#         pass
+        
+from django.db.models import F
 from django.db.models import Q
 def updatedata(ticker_data):
     symbol = ticker_data.get('s', 'N/A')
     close_price = Decimal(ticker_data.get('c', 'N/A'))
-    try:
+ 
+    # price_change = Decimal(ticker_data.get('p','N/A'))
+    # price_change_percent = Decimal(ticker_data.get('p','N/A'))
+    
+    
         
-        users = symbolmaster.objects.get(Q(symbol = symbol) & Q(type = "USD-M"))
-        
-        onehr = float(users.onehr)
-        twohr = float(users.twohr)
-        totalhr = float(users.totalhr)
-        
-        onehrchange = float(close_price) - float(onehr)
-        users.onehrprice = onehrchange
-        users.ltp = float(close_price)
-        users.onehrchange = (onehrchange/float(onehr)) * 100
-        
-        twohrchange = float(close_price) - float(twohr)
-        users.twohrprice =  twohrchange
-        users.twohrchange = (twohrchange/float(twohr)) * 100
-        totalhrchange = float(close_price) - float(totalhr)
-        users.totalhrprice = totalhrchange
-        users.totalhrchange = (totalhrchange/float(totalhr)) * 100
-        users.save()
-        print(symbol,onehrchange,twohrchange,totalhrchange)
-    except Exception as e:
-        print(str(e))
+    users = symbolmaster.objects.get(Q(symbol = symbol) & Q(type = "SPOT"))
+    
+    onehrchange = float(close_price) - float(users.onehr)
+    twohrchange = float(close_price) - float(users.twohr)
+    totalhrchange = float(close_price) - float(users.totalhr)
+    
+    # return symbolmaster(
+    #     id=users.id,
+    #     onehrprice=F('onehrprice') + onehrchange,
+    #     ltp=float(close_price),
+    #     onehrchange=F('onehrchange') + (onehrchange / float(users.onehr)) * 100,
+    #     twohrprice=F('twohrprice') + twohrchange,
+    #     twohrchange=F('twohrchange') + (twohrchange / float(users.twohr)) * 100,
+    #     totalhrprice=F('totalhrprice') + totalhrchange,
+    #     totalhrchange=F('totalhrchange') + (totalhrchange / float(users.totalhr)) * 100
+    # )
+    symbolmaster.objects.filter(Q(symbol=symbol) & Q(type="SPOT")).update(
+        onehrprice= onehrchange,
+        ltp=float(close_price),
+        onehrchange= (onehrchange / float(users.onehr)) * 100,
+        twohrprice=twohrchange,
+        twohrchange=(twohrchange / float(users.twohr)) * 100,
+        totalhrprice=  totalhrchange,
+        totalhrchange= (totalhrchange / float(users.totalhr)) * 100
+    )
+    print(symbol,onehrchange,twohrchange )
